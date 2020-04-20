@@ -1,0 +1,86 @@
+---
+title: "Data Exploration"
+output: pdf_document
+geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
+---
+
+## Load Packages
+This section loads the requisite packages and establishes the workspace
+
+```{r Workspace Setup, message = FALSE}
+
+getwd() # Check working directory
+
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(dplyr)
+library(viridis)
+library(RColorBrewer)
+library(here)
+library(sf)
+library(ggmap)
+
+# Set theme
+mytheme <- theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        legend.position = "top")
+theme_set(mytheme)
+
+```
+
+## Load Data
+
+```{r Load Data}
+pop_processed <- read.csv(here("Data", "Processed", "County_Pop_COVID_Processed.csv"))
+coal_counties_data <- read.csv(here("Data", "Processed", "Coal_Counties_Data.csv"))
+PA_AQS_Processed <- read.csv(here("Data", "Processed", "PA_AQS_Processed.csv"))
+PA_AQS_COVID <- read.csv(here("Data", "Processed", "PA_AQS_COVID.csv"))
+
+```
+
+
+## Data Eploration
+This section explores the data and gets it ready for visualization in the next section.
+
+```{r Data Exploration}
+ggplot(coal_counties_data, aes(x = case_rate, y = death_rate_conf, color = Mines)) +
+  geom_point() +
+  labs(x = "Confirmed Cases per 100,000 People", y = "Deaths per Confirmed Case", 
+       color = "Number of Mines in County") + 
+  scale_color_viridis_c(option = "inferno")
+
+
+ggplot(coal_counties_data, aes(x = Mines, y = death_rate_conf, color = death_rate_pop)) +
+  geom_point() +
+  labs(x = "Number of Mines", y = "Deaths per Confirmed Case", 
+       color = "Deaths per 100,000 People") + 
+  scale_color_viridis_c(option = "inferno")
+
+ggplot(filter(pop_processed, STATE == 42), 
+       aes(x = case_rate, y = death_rate_conf, shape = Mines > 0)) +
+  geom_point() +
+  labs(x = "Confirmed Cases per 100,000 People", y = "Deaths per Confirmed Case", 
+       shape = "Mines")
+
+```
+
+
+```{r Air Exploration}
+PA_PM25_COVID <- filter(PA_AQS_COVID, is.na(Avg.Mean.PM25) == FALSE)
+
+ggplot(PA_PM25_COVID, aes(x = Avg.Mean.PM25, y = death_rate_conf, shape = Mines > 0)) +
+  geom_point() + 
+  labs(x = expression(paste("Average Maximum PM2.5 (", mu, "g/m"^"3"*")")),
+       y = "Deaths per Confirmed Case", shape = "Mines")
+
+PA_Ozone_COVID <- filter(PA_AQS_COVID, is.na(Avg.Max.Ozone) == FALSE)
+
+ggplot(PA_Ozone_COVID, aes(x = Avg.Max.Ozone, y = death_rate_conf, shape = Mines > 0)) +
+  geom_point() + 
+  labs(x = "Average Ozone (ppm)", y = "Deaths per Confirmed Case", 
+     shape = "Mines")
+
+```
