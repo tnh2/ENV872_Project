@@ -1,0 +1,104 @@
+---
+output: 
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    number_sections: yes
+geometry: margin=2.54cm
+title: "Insert title of project here"
+subtitle: "Web address for GitHub repository"
+author: "Name"
+fontsize: 12pt
+mainfont: Times New Roman
+
+---
+
+\newpage
+\tableofcontents 
+\newpage
+\listoftables 
+\newpage
+\listoffigures 
+\newpage
+
+```{r setup, include=FALSE}
+# Set your working directory
+getwd()
+
+# Load your packages
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(dplyr)
+library(viridis)
+library(RColorBrewer)
+library(here)
+library(sf)
+library(ggmap)
+
+
+# Set your ggplot theme
+mytheme <- theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        legend.position = "bottom")
+theme_set(mytheme)
+
+# Load your datasets
+
+```
+
+
+# Rationale and Research Questions
+
+The purpose of this analysis is to explore whether counties with coal mines are impacted differently by COVID-19. With the novel coronavirus rapidly spreading through the United States, different locations are likely to be affected in different ways. In order to perform the analysis, I combined datasets containing information about coal mine locations, populations, and COVID-19 cases and deaths at the county level. Because other factors such as socioeconomic levels, population densities, and even government responses to the COVID-19 crisis vary widely across states, I decided that it was best to compare counties within states rather than performing analysis on the entire country. In particular, I focused on Pennsylvania and West Virginia. Pennsylvania has had a relatively large number of confirmed COVID-19 cases, meaning there is a reasonable amount of data to analyze. West Virginia has had relatively few confirmed cases, but I included it as a comparison to Pennsylvania since West Virginia coal mines have continued operation whereas Pennsylvania mines were closed in March ^1^.
+
+I am curious to see if there is any difference in COVID-19 outcomes between counties with coal mines and those without. In particular, I am interested in whether or not there will be a difference in mortality (the percentage of people who have the disease that die from it). The rational behind this exploration is that COVID-19 seems to be particularly lethal among people with existing conditions, especially respiratory issues. In turn, coal miners frequently suffer respiratory issues from the large amonts of dust that they encounter in their jobs. As such, I wondered if there might be a higher mortality rate in coal mining counties than non-coal mining counties (as a proxy for mortality amongst coal miners versus others). Likewise, coal mining involves sustained close-quarters operation and minimal opportunity for sanitization, hence my wanting to compare counties in Pennsylvania where the mines shut down in response to the outbreak to counties in West Virginia where mines continued operation.
+
+My research questions are:
+1. Do counties with coal mines have different mortality rates than similar counties without coal mines in the same state?
+
+2. Do counties with coal mines in Pennsylvania have different mortality rates than West Virgnia counties with coal mines?
+
+
+\newpage
+
+# Dataset Information
+
+
+
+\newpage
+
+# Exploratory Analysis 
+
+* Map
+* Histograms
+* Scatterplot
+
+
+
+\newpage
+
+# Analysis
+
+* Boxplots
+* Wilcoxon results
+
+
+## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
+
+## Question 2: 
+
+
+
+
+\newpage
+
+# Summary and Conclusions
+
+* No significant differences
+* Reasons why this analysis isn't great
+
+\newpage
+
+# References
+<add references here if relevant, otherwise delete this section> 

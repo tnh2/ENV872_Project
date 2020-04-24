@@ -9,7 +9,7 @@ editor_options:
 ## Load Packages
 This section loads the requisite packages and establishes the workspace
 
-```{r Workspace Setup, message = FALSE}
+```{r Workspace Setup, message=FALSE, include=FALSE}
 
 getwd() # Check working directory
 
@@ -26,18 +26,24 @@ library(ggmap)
 # Set theme
 mytheme <- theme_classic() +
   theme(axis.text = element_text(color = "black"), 
-        legend.position = "top")
+        legend.position = "bottom")
 theme_set(mytheme)
 
 ```
 
 ## Load Data
 
-```{r Load Data}
+```{r Load Data, message=FALSE, include=FALSE}
 pop_processed <- read.csv(here("Data", "Processed", "County_Pop_COVID_Processed.csv"))
 coal_counties_data <- read.csv(here("Data", "Processed", "Coal_Counties_Data.csv"))
 PA_AQS_Processed <- read.csv(here("Data", "Processed", "PA_AQS_Processed.csv"))
 PA_AQS_COVID <- read.csv(here("Data", "Processed", "PA_AQS_COVID.csv"))
+
+pop_processed_mine_labels <- pop_processed %>%
+  mutate(Mines.Label = Mines > 0)
+  
+pop_processed_mine_labels$Mines.Label[pop_processed_mine_labels$Mines.Label == TRUE] <- "Mines"
+pop_processed_mine_labels$Mines.Label[pop_processed_mine_labels$Mines.Label == FALSE] <- "No Mines"
 
 ```
 
@@ -45,30 +51,33 @@ PA_AQS_COVID <- read.csv(here("Data", "Processed", "PA_AQS_COVID.csv"))
 ## Data Eploration
 This section explores the data and gets it ready for visualization in the next section.
 
-```{r Data Exploration}
+```{r Data Exploration, message=FALSE, include=FALSE}
 ggplot(coal_counties_data, aes(x = case_rate, y = death_rate_conf, color = Mines)) +
   geom_point() +
   labs(x = "Confirmed Cases per 100,000 People", y = "Deaths per Confirmed Case", 
        color = "Number of Mines in County") + 
   scale_color_viridis_c(option = "inferno")
+```
+
+```{r Visualization Product, echo = FALSE, fig.cap = "Plot showing death rate vs confirmed COVID-19 case rate for counties in Pennsylvania. Note that the apparent decrease in death rate with increased confirmed cases is likely an artifact of increased testing in certain counties. There also seems to be a weak connection between counties with mines having higher mortality (and lower COVID-19 rates), but it is tenuous at best."}
+#knitr::include_graphics(here("Output", "MortalityVSCases.png"))
 
 
-ggplot(coal_counties_data, aes(x = Mines, y = death_rate_conf, color = death_rate_pop)) +
-  geom_point() +
-  labs(x = "Number of Mines", y = "Deaths per Confirmed Case", 
-       color = "Deaths per 100,000 People") + 
-  scale_color_viridis_c(option = "inferno")
-
-ggplot(filter(pop_processed, STATE == 42), 
-       aes(x = case_rate, y = death_rate_conf, shape = Mines > 0)) +
-  geom_point() +
+png(here("output", "MortalityVSCases.png"), width = 900)
+ggplot(filter(pop_processed_mine_labels, STATE == 42), 
+       aes(x = case_rate, y = death_rate_conf, color = Mines.Label)) +
+  geom_point(size  = 2) +
   labs(x = "Confirmed Cases per 100,000 People", y = "Deaths per Confirmed Case", 
-       shape = "Mines")
+       color = "", 
+       caption = str_wrap("Figure 1. Plot showing death rate vs confirmed COVID-19 case rate for Pennsylvanian counties with and without coal mines.", width = 200)) +
+  scale_color_viridis_d(option = "inferno", end = 0.75) +
+  theme(plot.caption = element_text(hjust = 0, size = 12))
+dev.off()
 
 ```
 
 
-```{r Air Exploration}
+```{r Air Exploration, message=FALSE, include=FALSE}
 PA_PM25_COVID <- filter(PA_AQS_COVID, is.na(Avg.Mean.PM25) == FALSE)
 
 ggplot(PA_PM25_COVID, aes(x = Avg.Mean.PM25, y = death_rate_conf, shape = Mines > 0)) +
@@ -83,4 +92,70 @@ ggplot(PA_Ozone_COVID, aes(x = Avg.Max.Ozone, y = death_rate_conf, shape = Mines
   labs(x = "Average Ozone (ppm)", y = "Deaths per Confirmed Case", 
      shape = "Mines")
 
+```
+
+
+## Distribution Exploration
+```{r Distribution, message=FALSE, include=FALSE}
+ggplot(pop_processed_mine_labels) +
+  geom_histogram(aes(x = death_rate_conf, color = Mines.Label))
+
+ggplot(filter(pop_processed_mine_labels, STNAME == "Pennsylvania")) +
+  geom_histogram(aes(x = death_rate_conf, color = Mines.Label), bins = 18) +
+  xlim(c(-0.01,0.1)) +
+  labs(title = "Penn.")
+
+ggplot(filter(pop_processed_mine_labels, STNAME == "Pennsylvania")) +
+  geom_histogram(aes(x = Deaths, color = Mines.Label), bins = 15) +
+  xlim(c(-10,150)) +
+  labs(title = "Penn.")
+
+ggplot(filter(pop_processed_mine_labels, STNAME == "Pennsylvania")) +
+  geom_histogram(aes(x = Confirmed, color = Mines.Label), bins = 18) +
+  xlim(c(-100,3000)) +
+  labs(title = "Penn.")
+
+```
+
+## Statistical Tests
+```{r Stats Tests, message=FALSE, warning=FALSE, include=FALSE}
+PA.Mine.Cos <- filter(pop_processed_mine_labels, 
+                      STNAME == "Pennsylvania" & Mines.Label == "Mines")
+
+PA.NoMines.Cos <- filter(pop_processed_mine_labels, 
+                      STNAME == "Pennsylvania" & Mines.Label == "No Mines")
+
+kruskal.test(PA.Mine.Cos$death_rate_conf, PA.NoMines.Cos$death_rate_conf)
+t.test(PA.Mine.Cos$death_rate_conf, PA.NoMines.Cos$death_rate_conf)
+```
+
+## Smaller Counties
+```{r Smaller Counties}
+PA.Pop <- filter(pop_processed_mine_labels, STNAME == "Pennsylvania")
+PA.Small <- filter(PA.Pop, POPESTIMATE2019 <= 0.8*max(PA.Pop$POPESTIMATE2019))
+PA.Small.Mines <- filter(PA.Small, Mines.Label == "Mines")
+PA.Small.NoMines <- filter(PA.Small, Mines.Label == "No Mines")
+
+ggplot(PA.Small) +
+  geom_histogram(aes(x = death_rate_conf, color = Mines.Label), bins = 18) +
+  labs(title = "Penn.")
+
+```
+
+```{r}
+ggplot(filter(pop_processed_mine_labels, STNAME == "West Virginia"), 
+       aes(x = case_rate, y = death_rate_conf, color = Mines.Label)) +
+  geom_point(size  = 2) +
+  labs(x = "Confirmed Cases per 100,000 People", y = "Deaths per Confirmed Case", 
+       color = "", 
+       caption = str_wrap("Figure 1. Plot showing death rate vs confirmed COVID-19 case rate for WV counties with and without coal mines.", width = 200)) +
+  scale_color_viridis_d(option = "inferno", end = 0.75) +
+  theme(plot.caption = element_text(hjust = 0, size = 12))
+
+
+ggplot(filter(pop_processed_mine_labels, STNAME == "West Virginia")) +
+  geom_histogram(aes(x = death_rate_conf, color = Mines.Label), bins = 18) +
+  labs(title = "WV")
+
+  
 ```
