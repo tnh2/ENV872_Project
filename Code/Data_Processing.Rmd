@@ -80,9 +80,18 @@ base_proj <- st_crs(county_bounds)[2]
 
 state_bounds_WGS <- st_transform(state_bounds, as.numeric(base_epsg))
 county_bounds_WGS <- st_transform(county_bounds, as.numeric(base_epsg))
-coal_counties_spatial <- st_intersection(county_bounds_WGS, mines)
-
+#coal_counties_spatial <- st_intersection(county_bounds_WGS, mines)
+coal_counties_spatial <- st_intersection(mines, county_bounds_WGS)
 coal_counties_tab <- st_drop_geometry(coal_counties_spatial)
+
+
+mines$mstafips <- sprintf("%02i", mines$mstafips)
+mines$mctyfips <- sprintf("%03i", mines$mctyfips)
+mines <- mutate(mines, FIPS = paste0(mstafips, mctyfips))
+
+coal_counties2 <- filter(county_bounds, COUNTYFP %in% unique(mines$mctyfips))
+
+diff <- filter(coal_counties_tab, COUNTYFP %notin% unique(coal_counties2$COUNTYFP))
 
 cont.mines <- filter(mines, state != "Alaska" & state != "Hawaii")
 cont.states <- state_bounds_WGS %>%
@@ -91,10 +100,10 @@ cont.states <- state_bounds_WGS %>%
 cont.counties <- filter(county_bounds_WGS, STATEFP %in% c(1,3:14,16:56))
 ## Visual Validation of intersection command
 ggplot() +
-  geom_sf(data = filter(state_bounds_WGS, STATEFP == 42)) +
-  geom_sf(data = filter(county_bounds_WGS, STATEFP == 42), fill = "white") +
-  geom_sf(data = filter(coal_counties_spatial, mstafips == 42), fill = "gray") +
-  geom_sf(data = filter(cont.mines, mstafips == 42))
+  #geom_sf(data = filter(state_bounds_WGS, STATEFP == 42)) +
+  #geom_sf(data = filter(county_bounds_WGS, STATEFP == 42), fill = "white") +
+  geom_sf(data = filter(coal_counties_spatial, STATEFP == 42)) +
+  #geom_sf(data = filter(cont.mines, mstafips == 42))
 
 ```
 
