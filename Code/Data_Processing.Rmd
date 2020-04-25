@@ -26,6 +26,7 @@ library(RColorBrewer)
 library(here)
 library(sf)
 library(ggmap)
+library(cowplot)
 
 # Set theme
 mytheme <- theme_classic() +
@@ -58,7 +59,7 @@ class(county_bounds) # Check filetype
 ```{r Load Tabular Data}
 
 # Load COVID rates data
-covid_all_raw <- read.csv(here("Data", "Raw", "COVID_County_04-18-2020.csv"))
+covid_all_raw <- read.csv(here("Data", "Raw", "COVID_County_04-23-2020.csv"))
 
 # Load population data
 pop_all_raw <- read.csv(here("Data", "Raw", "co-est2019-alldata.csv"))
@@ -77,10 +78,23 @@ This section selects the counties that have coal mines
 base_epsg <- st_crs(mines)[1]
 base_proj <- st_crs(county_bounds)[2]
 
+state_bounds_WGS <- st_transform(state_bounds, as.numeric(base_epsg))
 county_bounds_WGS <- st_transform(county_bounds, as.numeric(base_epsg))
 coal_counties_spatial <- st_intersection(county_bounds_WGS, mines)
 
 coal_counties_tab <- st_drop_geometry(coal_counties_spatial)
+
+cont.mines <- filter(mines, state != "Alaska" & state != "Hawaii")
+cont.states <- state_bounds_WGS %>%
+  filter(STATEFP %in% c(1, 3:14, 16:56)) %>%
+  droplevels()
+cont.counties <- filter(county_bounds_WGS, STATEFP %in% c(1,3:14,16:56))
+## Visual Validation of intersection command
+ggplot() +
+  geom_sf(data = filter(state_bounds_WGS, STATEFP == 42)) +
+  geom_sf(data = filter(county_bounds_WGS, STATEFP == 42), fill = "white") +
+  geom_sf(data = filter(coal_counties_spatial, mstafips == 42), fill = "gray") +
+  geom_sf(data = filter(cont.mines, mstafips == 42))
 
 ```
 
@@ -119,20 +133,44 @@ pop_processed <- pop_processed %>%
          death_rate_pop = Deaths / POPESTIMATE2019 * 100000) %>%
   left_join(count(coal_counties_tab, GEOID, name = "Mines"), c("FIPS" = "GEOID"))
 
+
 pop_processed$Mines <- replace_na(pop_processed$Mines, 0)
 
+pop_processed <- pop_processed %>%
+  mutate(Mines.Label = Mines > 0)
 
-#pop_processed$FIPS <- sprintf("%05d", pop_processed$FIPS)
+pop_processed$Mines.Label[pop_processed$Mines.Label == TRUE] <- "Mines"
+pop_processed$Mines.Label[pop_processed$Mines.Label == FALSE] <- "No Mines"
+  
 
 write.csv(pop_processed, here("Data", "Processed", "County_Pop_COVID_Processed.csv"))
 
 ```
 
+## Subset Data
+This section subsets the data into smaller datasets specific to the states being analyzed (Pennsylvania and West Virignia). The counties are also filtered so only counties with 80% of the maximum population are included (this step is to remove the most populous counties that have major cities (e.g., Philadelphia, Charleston).
 
-## Data Combining
+```{r Data Subsetting}
+PA.Pop <- filter(pop_processed, STNAME == "Pennsylvania" & death_rate_conf < 0.5)
+PA.Small <- filter(PA.Pop, POPESTIMATE2019 <= 0.8*max(PA.Pop$POPESTIMATE2019))
+PA.Small.Mines <- filter(PA.Small, Mines.Label == "Mines")
+PA.Small.NoMines <- filter(PA.Small, Mines.Label == "No Mines")
+
+write.csv(PA.Pop, here("Data", "Processed", "PA.Pop_processed.csv"))
+
+
+WV.Pop <- filter(pop_processed, STNAME == "West Virginia" & death_rate_conf < 0.5)
+WV.Small <- filter(WV.Pop, POPESTIMATE2019 <= 0.8*max(WV.Pop$POPESTIMATE2019))
+WV.Small.Mines <- filter(WV.Small, Mines.Label == "Mines")
+WV.Small.NoMines <- filter(WV.Small, Mines.Label == "No Mines")
+
+write.csv(WV.Pop, here("Data", "Processed", "WV.Pop_processed.csv"))
+```
+
+## Data Aggregation
 This section finalizes the data aggregation to get data sets for comparison groups that include population data, covid data, and calculated covid rates (per 100,000 persons).
 
-```{r Data Combining}
+```{r Data Aggregation}
 coal_counties_data <- pop_processed %>%
   filter(FIPS %in% coal_counties_tab$GEOID) %>%
   droplevels() %>%
@@ -174,17 +212,12 @@ not_coal_state_cases <- pop_processed %>%
 
 write.csv(not_coal_state_cases, here("Data", "Processed", "Not_Coal_State_Cases.csv"))
 
-# KY_avg <- pop_processed %>%
-#   filter(STNAME == "Kentucky") %>%
-#   mutate(Above_avg = case_rate > coal_state_cases$case_rate[coal_state_cases$STNAME == STNAME])
-# 
-# coal_KY_avg <- filter(KY_avg, FIPS %in% coal_counties_tab$GEOID)
-
 ```
 
+## Air Quality Data
+I tried bringing some air quality data into this analyis, but it did not end up providing much additional insight. It is still included in this code, but not in the report.
 
-
-```{r Air Quality}
+```{r Air Quality, eval=FALSE, include=FALSE}
 
 PA_Ozone <- read.csv(here("Data", "Raw", "PA_Ozone_Daily_041620.csv"))
 PA_Ozone <- mutate(PA_Ozone, Pollutant = "Ozone_AQI")

@@ -113,8 +113,6 @@ ProjectAnalysis.rmd: R Markdown file containing preliminary code for gathering, 
 
 ## Quality assurance/quality control
 
-At this time, I have not explored the data enough to have determined the necessary QA/QC measures to take.
-
 One step I will take to check the GIS data and analysis is to produce a map that can be visually inspected for accuracy (e.g., are there coal mines in all the counties identified as mining counties).
 
 I will also make sure that all of the counties in the COVID dataset match with a county in the Census data.

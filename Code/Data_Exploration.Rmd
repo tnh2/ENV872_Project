@@ -22,6 +22,7 @@ library(RColorBrewer)
 library(here)
 library(sf)
 library(ggmap)
+library(cowplot)
 
 # Set theme
 mytheme <- theme_classic() +
@@ -37,7 +38,7 @@ theme_set(mytheme)
 pop_processed <- read.csv(here("Data", "Processed", "County_Pop_COVID_Processed.csv"))
 coal_counties_data <- read.csv(here("Data", "Processed", "Coal_Counties_Data.csv"))
 PA_AQS_Processed <- read.csv(here("Data", "Processed", "PA_AQS_Processed.csv"))
-PA_AQS_COVID <- read.csv(here("Data", "Processed", "PA_AQS_COVID.csv"))
+#PA_AQS_COVID <- read.csv(here("Data", "Processed", "PA_AQS_COVID.csv"))
 
 pop_processed_mine_labels <- pop_processed %>%
   mutate(Mines.Label = Mines > 0)
@@ -63,7 +64,7 @@ ggplot(coal_counties_data, aes(x = case_rate, y = death_rate_conf, color = Mines
 #knitr::include_graphics(here("Output", "MortalityVSCases.png"))
 
 
-png(here("output", "MortalityVSCases.png"), width = 900)
+#png(here("output", "MortalityVSCases.png"), width = 900)
 ggplot(filter(pop_processed_mine_labels, STATE == 42), 
        aes(x = case_rate, y = death_rate_conf, color = Mines.Label)) +
   geom_point(size  = 2) +
@@ -72,12 +73,12 @@ ggplot(filter(pop_processed_mine_labels, STATE == 42),
        caption = str_wrap("Figure 1. Plot showing death rate vs confirmed COVID-19 case rate for Pennsylvanian counties with and without coal mines.", width = 200)) +
   scale_color_viridis_d(option = "inferno", end = 0.75) +
   theme(plot.caption = element_text(hjust = 0, size = 12))
-dev.off()
+#dev.off()
 
 ```
 
 
-```{r Air Exploration, message=FALSE, include=FALSE}
+```{r Air Exploration, eval=FALSE, message=FALSE, include=FALSE}
 PA_PM25_COVID <- filter(PA_AQS_COVID, is.na(Avg.Mean.PM25) == FALSE)
 
 ggplot(PA_PM25_COVID, aes(x = Avg.Mean.PM25, y = death_rate_conf, shape = Mines > 0)) +
