@@ -160,3 +160,7 @@ ggplot(filter(pop_processed_mine_labels, STNAME == "West Virginia")) +
 
   
 ```
+
+## Locational Verification
+The first step of my analysis was to make sure that the counties with coal mines were properly identified. To do this verification, I made a map showing the counties that were identified as having a coal mine on one layer, and the point locations of the mines on another layer. If the counties were correctly identified, each of the mine points should be within one of the coal county boundaries. This map is shown in Figure 1. As the figure shows, the counties were correctly identified (i.e., no mines are in a non-coal county and all coal counties have at least one mine).
+

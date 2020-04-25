@@ -113,22 +113,22 @@ has had a relatively large number of confirmed COVID-19 cases, meaning
 there is a reasonable amount of data to analyze. West Virginia has had
 relatively few confirmed cases, but I included it as a comparison to
 Pennsylvania since West Virginia coal mines have continued operation
-whereas Pennsylvania mines were closed in March \textsuperscript{1}.
+whereas Pennsylvania mines were closed in March\textsuperscript{1}.
 
-I am curious to see if there is any difference in COVID-19 outcomes
-between counties with coal mines and those without. In particular, I am
-interested in whether or not there will be a difference in mortality
-(the percentage of people who have the disease that die from it). The
-rational behind this exploration is that COVID-19 seems to be
-particularly lethal among people with existing conditions, especially
+I am particularly interested in whether or not there will be a
+difference in COVID-19 fatality (the percentage of people who have the
+disease that die from it) between the counties with coal mines and those
+without. The rational behind this exploration is that COVID-19 seems to
+be particularly lethal among people with existing conditions, especially
 respiratory issues. In turn, coal miners frequently suffer respiratory
 issues from the large amonts of dust that they encounter in their jobs.
-As such, I wondered if there might be a higher mortality rate in coal
-mining counties than non-coal mining counties (as a proxy for mortality
+As such, I wondered if there might be a higher fatality rate in coal
+mining counties than non-coal mining counties (as a proxy for fatality
 amongst coal miners versus others). Likewise, coal mining involves
 sustained close-quarters operation and minimal opportunity for
-sanitization, hence my wanting to compare counties in Pennsylvania where
-the mines shut down in response to the outbreak to counties in West
+sanitization. These factors make coal mines a potential hotbed for
+COVID-19 spread, leading me to compare counties in Pennsylvania where
+the mines shut down in response to the outbreak against counties in West
 Virginia where mines continued operation.
 
 My research questions are:
@@ -136,10 +136,10 @@ My research questions are:
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \item
-  Do counties with coal mines have different mortality rates than
-  similar counties without coal mines in the same state?
+  Do counties with coal mines have different fatality rates than similar
+  counties without coal mines in the same state?
 \item
-  Do counties with coal mines in Pennsylvania have different mortality
+  Do counties with coal mines in Pennsylvania have different fatality
   rates than West Virgnia counties with coal mines?
 \end{enumerate}
 
@@ -155,7 +155,7 @@ for US counties, coal mine locations from the US Department of Energy
 the Johns Hopkins University Center for Systems Science and Engineering
 (CSSE). The population data from the US Census Bureau are from 2019
 estimates. The coal mine information inlcudes all operating surface and
-underground mines in the united states. While the dataset includes
+underground mines in the United States. While the dataset includes
 information on the mine type and output, I only used the location data
 for this analysis. The COVID-19 data from Johns Hopkins includes
 confirmed COVID-19 cases and reported deaths by county as of April 23rd,
@@ -165,7 +165,7 @@ I started wrangling my data by finding which counties had coal mines in
 them using the geospatial analysis capabilities of the sf package in R.
 I then joined the COVID-19 data with the census population data using
 the county FIPS codes and calculated metrics for COVID-19 case rates
-(per 100,000 people), mortality rate (deaths per confirmed COVID-19
+(per 100,000 people), fatality rate (deaths per confirmed COVID-19
 case), and death rates per 100,000 people in the county. This data was
 then combined with the data above identifying whether a county had coal
 mines or not to complete the data joining. From this country-wide
@@ -191,7 +191,7 @@ Confirmed & Confirmed COVID-19 cases & Total Cases\tabularnewline
 Deaths & Reported COVID-19 deaths & Total Deaths\tabularnewline
 case\_rate & Rate of COVID-19 cases & Cases per 100,000
 people\tabularnewline
-death\_rate\_conf & Mortality & Deaths per confirmed case\tabularnewline
+death\_rate\_conf & Fatality & Deaths per confirmed case\tabularnewline
 death\_rate\_pop & Deaths rate in population & Deaths per 100,000
 people\tabularnewline
 Mines.Label & Whether the County has mines & Mines or No
@@ -204,110 +204,87 @@ Mines\tabularnewline
 \hypertarget{exploratory-analysis}{%
 \section{Exploratory Analysis}\label{exploratory-analysis}}
 
-\hypertarget{locational-verification}{%
-\subsection{Locational Verification}\label{locational-verification}}
-
-The first step of my analysis was to make sure that the counties with
-coal mines were properly identified. To do this verification, I made a
-map showing the counties that were identified as having a coal mine on
-one layer, and the point locations of the mines on another layer. If the
-counties were correctly identified, each of the mine points should be
-within one of the coal county boundaries. This map is shown in Figure 1.
-As the figure shows, the counties were correctly identified (i.e., no
-mines are in a non-coal county and all coal counties have at least one
-mine).
-
 \hypertarget{pennsylvania-data}{%
 \subsection{Pennsylvania Data}\label{pennsylvania-data}}
 
 Turning my attention to Pennsylvania, I started by creating a histogram
-of the mortality rates of the coal counties and the non-coal counties.
+of the fatality rates of the coal counties and the non-coal counties.
 The first histogram I created is shown in Figure 1 below.
 
 \begin{figure}
 \centering
 \includegraphics{Hancock_ENV872_Project_files/figure-latex/PA Histogram1-1.pdf}
-\caption{Histogram of Mortality in Pennsylvania counties}
+\caption{Histogram of Fatality in Pennsylvania counties}
 \end{figure}
 
 Two things are immediately evident: the data are not normally
-distributed, and there are some strange cases where the mortality is 1
-(i.e., everyone confirmed case of COVID-19 resulted in a death). Based
-on general knowledge that COVID-19 is not likely to be lethal enough to
+distributed, and there are some strange cases where the fatality is 1
+(i.e., every confirmed case of COVID-19 resulted in a death). Based on
+general knowledge that COVID-19 is not likely to be lethal enough to
 kill even a majority of patients, we can assume that these counties had
 such limited testing that only the mortalities were tested. For the sake
 of this analysis, we will discard those counties and any others that
-have a mortality rate greater than 50\%. We will assume that the
+have a fatality rate greater than 50\%. We will assume that the
 remaining counties had testing that was sufficiently widespread to
-provide a reasonable approximation of the mortality. This new dataset
+provide a reasonable approximation of the fatality. This new dataset
 yields the histogram in Figure 2. The distribution is still not normal,
 but it has a smoother shape for both the counties with mines and those
 without. There are still a few counties with suspiciously higher
-mortality rates, but without further data, there is not enough reason to
+fatality rates, but without further data, there is not enough reason to
 remove them.
 
 \begin{figure}
 \centering
 \includegraphics{Hancock_ENV872_Project_files/figure-latex/PA Histogram2-1.pdf}
-\caption{Histogram of Mortality in Pennsylvania counties (outliers
+\caption{Histogram of Fatality in Pennsylvania counties (outliers
 removed)}
 \end{figure}
 
-I decided to explore the potential relationship between mortality and
-the amount of testing by plotting mortality against the number of
-confirmed cases per 100,000 people in each county. The results are
-presented in Figure 3. Even without the aforementioned counties that
-only tested fata cases, there appears to be a slight decreasing trend in
-mortality as the confirmed case rate increases. However, this trend is
-not statistically significant (linear regression; p-value = 0.395;
+I decided to explore the potential relationship between fatality and the
+amount of testing by plotting fatality against the number of confirmed
+cases per 100,000 people in each county. The results are presented in
+Figure 3. Even without the aforementioned counties that only tested
+fatal cases, there appears to be a slight decreasing trend in fatality
+as the confirmed case rate increases. However, this trend is not
+statistically significant (linear regression; p-value = 0.395;
 F-statistic = 0.7344; degrees of freedom: 1 and 64).
 
 \begin{figure}
 \centering
-\includegraphics{Hancock_ENV872_Project_files/figure-latex/PA Mortality vs Case Rate-1.pdf}
-\caption{Mortality vs confirmed COVID-19 case rate for Pennsylvanian
+\includegraphics{Hancock_ENV872_Project_files/figure-latex/PA Fatality vs Case Rate-1.pdf}
+\caption{Fatality vs confirmed COVID-19 case rate for Pennsylvanian
 counties with and without coal mines.}
 \end{figure}
-
-\begin{itemize}
-\tightlist
-\item
-  Map
-\item
-  Histograms
-\item
-  Scatterplot
-\end{itemize}
 
 \hypertarget{west-virginia-data}{%
 \subsection{West Virginia Data}\label{west-virginia-data}}
 
 As mentioned earlier, I am also interested in seeing if there is a
 difference between West Virginia, where coal mines stayed open despite
-the pandemice, and Pennsylvania, where mines were closed. In Figure 5, I
+the pandemic, and Pennsylvania, where mines were closed. In Figure 4, I
 plotted histograms for the West Virginia data, similar to what was done
 for Pennsylvania. From these histograms, we can see that there were a
 few West Virignia counties that tested mostly fatal cases of COVID-19,
-so it is reasonable to perform the same removal of ouliers with
-mortality rates above 50\%. Likewise, the West Virginia data has a very
-non-normal distribution.
+so it is reasonable to perform the same removal of ouliers with fatality
+rates above 50\%. Likewise, the West Virginia data has a very non-normal
+distribution.
 
 \begin{figure}
 \centering
 \includegraphics{Hancock_ENV872_Project_files/figure-latex/WV Histograms-1.pdf}
-\caption{Histogram of Mortality in West Virginia Counties (a) with
+\caption{Histogram of Fatality in West Virginia Counties (a) with
 outliers and (b) without outliers.}
 \end{figure}
 
-Plotting the mortality against the confirmed case rate for West Virginia
-counties, as shown in Figure 6, reveals little structure to the data.
+Plotting the fatality against the confirmed case rate for West Virginia
+counties, as shown in Figure 5, reveals little structure to the data.
 Perhaps the most useful conclusion that can come from this exploration
 of the data is that West Virginia has a rather low reported case rate.
 
 \begin{figure}
 \centering
-\includegraphics{Hancock_ENV872_Project_files/figure-latex/WV Mortality vs Case Rate-1.pdf}
-\caption{Mortality vs confirmed COVID-19 case rate for West Virginian
+\includegraphics{Hancock_ENV872_Project_files/figure-latex/WV Fatality vs Case Rate-1.pdf}
+\caption{Fatality vs confirmed COVID-19 case rate for West Virginian
 counties with and without coal mines.}
 \end{figure}
 
@@ -316,50 +293,116 @@ counties with and without coal mines.}
 \hypertarget{analysis}{%
 \section{Analysis}\label{analysis}}
 
-\begin{itemize}
-\tightlist
-\item
-  Boxplots
-\item
-  Wilcoxon results
-\end{itemize}
-
-\hypertarget{question-1-do-counties-with-coal-mines-have-different-mortality-rates-than-similar-counties-without-coal-mines-in-the-same-state}{%
+\hypertarget{question-1-do-counties-with-coal-mines-have-different-fatality-rates-than-similar-counties-without-coal-mines-in-the-same-state}{%
 \subsection{Question 1: Do counties with coal mines have different
-mortality rates than similar counties without coal mines in the same
-state?}\label{question-1-do-counties-with-coal-mines-have-different-mortality-rates-than-similar-counties-without-coal-mines-in-the-same-state}}
+fatality rates than similar counties without coal mines in the same
+state?}\label{question-1-do-counties-with-coal-mines-have-different-fatality-rates-than-similar-counties-without-coal-mines-in-the-same-state}}
 
 To answer the first question comparing coal mining counties in
 Pennsylvania to non-mining counties, I performed a non-parametric
-Wilcoxon test. I chose to use a non-parametric test because the data are
-not distributed in a normal distribution (as seen in the Exploration
-section). The Wilcoxon uses a ranking system to see if two data sets
-have similar shapes.
+Wilcoxon rank sum test. I chose to use a non-parametric test because the
+data are not distributed normally (as seen in the Exploration section).
+The Wilcoxon test uses a ranking system to see if two data sets come
+from the same distribution. According to this test, there is no
+significant difference between the fatality rates in coal mining
+counties versus non-mine counties (Wilcoxon test; p = 0.7516; W =
+536.5). To visualize this result, I made a boxplot for both sets of data
+(fatality in each type of county). This boxplot is shown in Figure 6.
+The similarity between the two boxplots reinforces the fact that the two
+sets of data are similar.
 
-\hypertarget{question-2-do-counties-with-coal-mines-in-pennsylvania-have-different-mortality-rates-than-west-virgnia-counties-with-coal-mines}{%
+\begin{figure}
+\centering
+\includegraphics{Hancock_ENV872_Project_files/figure-latex/PA_Boxplots-1.pdf}
+\caption{Boxplots of fatality in Pennsylvania counties.}
+\end{figure}
+
+\hypertarget{question-2-do-counties-with-coal-mines-in-pennsylvania-have-different-fatality-rates-than-west-virgnia-counties-with-coal-mines}{%
 \subsection{Question 2: Do counties with coal mines in Pennsylvania have
-different mortality rates than West Virgnia counties with coal
-mines?}\label{question-2-do-counties-with-coal-mines-in-pennsylvania-have-different-mortality-rates-than-west-virgnia-counties-with-coal-mines}}
+different fatality rates than West Virgnia counties with coal
+mines?}\label{question-2-do-counties-with-coal-mines-in-pennsylvania-have-different-fatality-rates-than-west-virgnia-counties-with-coal-mines}}
+
+I also used a Wilcoxon test for the second question. As with the first
+question, the West Virginia and Pennsylvania mine counties have
+non-normal distributions. Once again, there is no significant difference
+between the fatality cases in the mining counties of the two states
+(Wilcoxon Test; p = 0.0905; W = 306.5). Boxplots of the fatality rates
+in the two states also show that they are not significantly different
+(Figure 7).
+
+\begin{figure}
+\centering
+\includegraphics{Hancock_ENV872_Project_files/figure-latex/PA-WV_Boxplots-1.pdf}
+\caption{Boxplots of fatality in mining counties in Pennsylvania and
+West Virginia.}
+\end{figure}
 
 \newpage
 
 \hypertarget{summary-and-conclusions}{%
 \section{Summary and Conclusions}\label{summary-and-conclusions}}
 
-\begin{itemize}
-\tightlist
-\item
-  No significant differences
-\item
-  Reasons why this analysis isn't great
-\end{itemize}
+Based on the analyses explained earlier, there does not appear to be a
+statistically significant difference in COVID-19 effects on counties
+with and without coal mines (in Pennsylvania and West Virginia, at
+least). Similarly, the fact that Pennsylvania closed their coal mines
+due to the pandemic and West Virginia did not does not seem to have led
+to a higher fatality rate in West Virginia. My initial thought was that
+counties with coal mines might have higher fatality rates because of the
+more severe outcomes associated with COVID-19 in patients with
+pre-existing conditions and the prevalence of pulmonary disease among
+coal miners. However, there are a number of factors that could account
+for this data not yielding these results.
+
+One possibility is that it is too early in the US pandemic to see enough
+cases to accurately assess mortality. Especially in West Virginia and
+more rural parts of Pennsylvania, there has not been thorough testing,
+so the data might not have enough statistical power. Moreover, the virus
+might not have infected enough people in these regions yet to be able to
+compare the outcomes. It is possible that, as the virus spreads, more
+cases (and, subsequently, more fatality data) will become available.
+Perhaps by the end of this summer, a similar analysis might have a
+different outcome. Conversely, it is possible that the virus will not
+impact these regions as much as expected. A number of theories have been
+proposed for why this low incidence might be observed, including the
+fact that these smaller communities tend to be more spread out (so the
+virus spreads slower) or that the virus has actually been in West
+Virginia longer than is commonly thought (potentially since December).
+Even if there is truth to these ideas, it seems very likely that a major
+limitation of this study is limited testing, which results in a lack of
+data.
+
+Another factor that might have led to these negative results is that the
+number of mining community members who are actually miners is often
+quite low (especially at the county level). As such, the number of
+people in the county who are actually compromised because of the
+presence of the mine is relatively low. Socioeconomic factors, or even
+potential vulnerabilities due to pollution from the mine, can cross
+county lines to other non-mining counties, which would lessen the
+difference seen when comparing the two.
+
+Nonetheless, it is interesting to see that there is no appreciable
+difference bewteen mining and non-mining counties when it comes to
+COVID-19 fatalities. Further work could be done to identify factors that
+can contribute to differences in fatality (including prevalence of
+testing, air quality issues, and socioeconomic factors, among others).
+It will also be interesting to see how the COVID-19 situation evolves,
+and similar analyses may be warranted in a number of months when more
+data is available.
 
 \newpage
 
 \hypertarget{references}{%
 \section{References}\label{references}}
 
-\textless add references here if relevant, otherwise delete this
-section\textgreater{}
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Smith, J. (2020, April 5). In West Virginia, experts say coal mines
+  could be massive spreading ground for COVID-19. Mines across the state
+  are still operating normally. \emph{Times West Virginia}, Retrieved
+  from www.timeswv.com
+\end{enumerate}
 
 \end{document}
