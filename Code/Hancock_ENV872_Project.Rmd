@@ -51,6 +51,12 @@ mytheme <- theme_classic() +
 theme_set(mytheme)
 
 # Load your datasets
+# Load PA data
+PA.pop <- read.csv(here("Data", "Processed", "PA.Pop_processed.csv"))
+
+# Load West Virginia data
+WV.pop <- read.csv(here("Data", "Processed", "WV.Pop_processed.csv"))
+
 
 ```
 
@@ -100,9 +106,6 @@ Mines.Label     | Whether the County has mines | Mines or No Mines
 Turning my attention to Pennsylvania, I started by creating a histogram of the fatality rates of the coal counties and the non-coal counties. The first histogram I created is shown in Figure 1 below. 
 
 ```{r PA Histogram1, echo=FALSE, fig.cap="Histogram of Fatality in Pennsylvania counties", message=FALSE, warning=FALSE}
-# Load PA data
-PA.pop <- read.csv(here("Data", "Processed", "PA.Pop_processed.csv"))
-
 ggplot(PA.pop) +
   geom_histogram(aes(x = death_rate_conf, fill = Mines.Label), bins = 18) +
   labs(x = "Fatality", y = "Count", fill = "") +
@@ -113,7 +116,7 @@ ggplot(PA.pop) +
 Two things are immediately evident: the data are not normally distributed, and there are some strange cases where the fatality is 1 (i.e., every confirmed case of COVID-19 resulted in a death). Based on general knowledge that COVID-19 is not likely to be lethal enough to kill even a majority of patients, I assumed that these counties had such limited testing that only the mortalities were tested. For the sake of this analysis, discarded those counties and any others that have a fatality rate greater than 50%. I assumed that the remaining counties had testing that was sufficiently widespread to provide a reasonable approximation of the fatality. This new dataset yields the histogram in Figure 2. The distribution is still not normal, but it has a smoother shape for both the counties with mines and those without. There are still a few counties with suspiciously higher fatality rates, but without further data, there is not enough reason to remove them.
 
 ```{r PA Histogram2, echo=FALSE, fig.cap="Histogram of Fatality in Pennsylvania counties (outliers removed)", message=FALSE, warning=FALSE}
-# Filter for counties with death rate > 0.5
+# Filter for counties with death rate < 0.5 (50%)
 PA.pop_testing <- filter(PA.pop, death_rate_conf < 0.5)
 
 ggplot(PA.pop_testing) +
@@ -125,13 +128,14 @@ ggplot(PA.pop_testing) +
 I decided to explore the potential relationship between fatality and the amount of testing by plotting fatality against the number of confirmed cases per 100,000 people in each county. The results are presented in Figure 3. Even without the aforementioned counties that only tested fatal cases, there appears to be a slight decreasing trend in fatality as the confirmed case rate increases. However, this trend is not statistically significant (linear regression; p-value = 0.395; F-statistic = 0.7344; degrees of freedom: 1 and 64).
 
 ```{r PA Fatality vs Case Rate, echo=FALSE, fig.cap=" Fatality vs confirmed COVID-19 case rate for Pennsylvanian counties with and without coal mines.", message=FALSE, warning=FALSE}
-
+# Scatterplot
 ggplot(PA.pop_testing, aes(x = case_rate, y = death_rate_conf, color = Mines.Label)) +
   geom_point(size  = 2) +
   labs(x = "Confirmed Cases per 100,000 People", y = "Fatality", 
        color = "") +
   scale_color_viridis_d(option = "inferno", end = 0.75)
 
+# Linear regression
 fatality.case_rate <- lm(data = PA.pop_testing, death_rate_conf ~ case_rate)
 ```
 
@@ -140,16 +144,14 @@ As mentioned earlier, I am also interested in seeing if there is a difference be
 
 ```{r WV Histograms, echo=FALSE, fig.cap="Histogram of Fatality in West Virginia Counties (a) with outliers and (b) without outliers.", message=FALSE, warning=FALSE}
 
-# Load West Virginia data
-WV.pop <- read.csv(here("Data", "Processed", "WV.Pop_processed.csv"))
-
 # Filter for counties with death rate > 0.5
 WV.pop_testing <- filter(WV.pop, death_rate_conf < 0.5)
 
+# Create histograms
 WV.hist1 <- ggplot(WV.pop) +
   geom_histogram(aes(x = death_rate_conf, fill = Mines.Label), bins = 20) +
   labs(x = "Fatality", y = "Count", fill = "NULL") +
-  theme(legend.position = "none") +
+  theme(legend.position = "none") + # hide legend
   scale_fill_viridis_d(option = "inferno", end = 0.75)
 
 WV.hist2 <- ggplot(WV.pop_testing) +
@@ -157,6 +159,7 @@ WV.hist2 <- ggplot(WV.pop_testing) +
   labs(x = "Fatality", y = "Count", fill = "") +
   scale_fill_viridis_d(option = "inferno", end = 0.75)
 
+# Plot histograms together
 plot_grid(WV.hist1, WV.hist2, nrow = 2, align = 'h', labels = c("(a)", "(b)"), label_size = 12)
 
 ```
@@ -172,6 +175,7 @@ ggplot(WV.pop_testing, aes(x = case_rate, y = death_rate_conf, color = Mines.Lab
        color = "") +
   scale_color_viridis_d(option = "inferno", end = 0.75)
 
+# Linear regression to check for relationship
 fatality.case_rate <- lm(data = WV.pop_testing, death_rate_conf ~ case_rate)
 ```
 
@@ -207,7 +211,10 @@ Wilcoxon.PA.WV <- wilcox.test(filter(PA.pop_testing, Mines.Label == "Mines")$dea
 ```
 
 ```{r PA-WV_Boxplots, fig.cap="Boxplots of fatality in mining counties in Pennsylvania and West Virginia.", message=FALSE, warning=FALSE}
+# Combine datasets to make plotting easier
 PA.WV.mines <- rbind(PA.pop_testing, WV.pop_testing)
+
+# Boxplots on same axes
 ggplot() +
   geom_boxplot(data = filter(PA.WV.mines, 
                              Mines.Label == "Mines"), aes (x = STNAME, y = death_rate_conf)) +
